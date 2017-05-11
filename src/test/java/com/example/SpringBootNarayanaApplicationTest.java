@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNull;
 @RunWith(SpringRunner.class)
 @EnableAutoConfiguration
 @SpringBootTest(properties = "camel.springboot.main-run-controller=true")
-public class SpringBootNarayanaApplicationTests {
+public class SpringBootNarayanaApplicationTest {
 
 	public static final int MAX_WAIT_TIME = 1000;
 
