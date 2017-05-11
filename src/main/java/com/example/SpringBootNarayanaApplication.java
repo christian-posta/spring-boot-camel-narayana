@@ -10,7 +10,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.jms.ConnectionFactory;
 import javax.sql.DataSource;
-import javax.transaction.TransactionManager;
 
 @SpringBootApplication
 public class SpringBootNarayanaApplication {

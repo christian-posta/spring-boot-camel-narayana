@@ -9,8 +9,10 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import javax.sql.DataSource;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
@@ -28,11 +30,19 @@ public class SpringBootNarayanaApplicationTests {
 	@Autowired
 	CamelContext camelContext;
 
+	@Autowired
+	DataSource dataSource;
+
 	@Test
 	public void contextLoads() throws InterruptedException {
+		AuditLogDao auditLogDao = new AuditLogDao(dataSource);
+
 		assertNotNull(camelContext);
 		System.out.println("Sleeping....");
 		TimeUnit.SECONDS.sleep(2);
+
+		String message = "this message will explode";
+		assertEquals(0, auditLogDao.getAuditCount(message));
 
 		MockEndpoint mockOut = getMockEndpoint(camelContext, "mock:out");
 		mockOut.whenAnyExchangeReceived(new ExceptionThrowingProcessor());
@@ -40,14 +50,15 @@ public class SpringBootNarayanaApplicationTests {
 		ProducerTemplate template = camelContext.createProducerTemplate();
 		ConsumerTemplate consumer = camelContext.createConsumerTemplate();
 
-		String message = "this message will explode";
 		template.sendBody("nonTxJms:inbound", message);
 
+		// TODO: add more checking here, including the audit dao
 //		assertEquals(message, consumer.receiveBody("jms:ActiveMQ.DLQ", MAX_WAIT_TIME, String.class));
 
 		// the send operation is performed while a database transaction is going on, so it is rolled back
 		// on exception
 		assertNull(consumer.receiveBody("jms:outbound", MAX_WAIT_TIME, String.class));
+		assertEquals(0, auditLogDao.getAuditCount(message)); // the insert is rolled back
 	}
 
 
